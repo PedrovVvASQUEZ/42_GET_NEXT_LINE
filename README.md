@@ -1,27 +1,27 @@
 # get_next_line
 
-Projet C de l’école 42 : lire un flux progressivement et renvoyer son contenu ligne par ligne, sans charger le fichier entier en mémoire.
+A 42 School C project: read a file descriptor progressively and return its contents one line at a time, without loading the entire file into memory.
 
-## Fonctionnement
+## How it works
 
-La fonction `get_next_line` lit un descripteur avec `read(2)` et conserve les caractères déjà lus mais pas encore retournés. Chaque appel renvoie la prochaine ligne, jusqu’au prochain `\n` inclus. À la fin du flux, elle renvoie le dernier fragment s’il ne se termine pas par un saut de ligne, puis renvoie `NULL` aux appels suivants. Elle renvoie également `NULL` en cas de descripteur invalide ou d’erreur de lecture.
+The `get_next_line` function reads from a file descriptor using `read(2)` and keeps any characters already read but not yet returned. Each call returns the next line, including the next `\n` if present. At the end of the stream, it returns the final fragment if it does not end with a newline, then returns `NULL` on subsequent calls. It also returns `NULL` for an invalid file descriptor or a read error.
 
-La mémoire de chaque ligne retournée appartient à l’appelant et doit être libérée avec `free`.
+The caller owns the memory allocated for each returned line and must release it with `free`.
 
 ## Versions
 
-- **Partie obligatoire** : un état de lecture conservé pour un descripteur à la fois.
-- **Partie bonus** : un état distinct par descripteur, permettant d’alterner les appels sur plusieurs fichiers ouverts. L’état est stocké dans un tableau statique de 1024 entrées, indexé par la valeur du descripteur.
+- **Mandatory part**: maintains reading state for one file descriptor at a time.
+- **Bonus part**: maintains separate state for each file descriptor, allowing calls to alternate between multiple open files. State is stored in a static array of 1024 entries, indexed by the file descriptor value.
 
-Les deux versions exposent la même fonction. Il faut donc compiler **soit** les fichiers obligatoires, **soit** les fichiers bonus, et ne pas les lier ensemble.
+Both versions expose the same function. Therefore, compile **either** the mandatory files **or** the bonus files; do not link them together.
 
 ## Configuration
 
-`BUFFER_SIZE` détermine le nombre d’octets lus à chaque appel de `read`. Sa valeur par défaut dans les en-têtes est `6` ; elle peut être remplacée à la compilation, par exemple avec `-D BUFFER_SIZE=42`.
+`BUFFER_SIZE` determines how many bytes are read on each call to `read`. Its default value in the headers is `6`; it can be overridden at compile time, for example with `-D BUFFER_SIZE=42`.
 
-## Utilisation
+## Usage
 
-Exemple de programme client, placé à la racine du dépôt dans `main.c` :
+Example client program, placed at the repository root in `main.c`:
 
 ```c
 #include "get_next_line/get_next_line.h"
@@ -48,7 +48,7 @@ int main(void)
 }
 ```
 
-Compiler la partie obligatoire depuis la racine du dépôt :
+Compile the mandatory part from the repository root:
 
 ```sh
 cc -Wall -Wextra -Werror -D BUFFER_SIZE=42 main.c \
@@ -57,27 +57,27 @@ cc -Wall -Wextra -Werror -D BUFFER_SIZE=42 main.c \
   -o get_next_line_app
 ```
 
-Pour compiler la partie bonus, remplacer les deux fichiers `.c` obligatoires par `get_next_line/get_next_line_bonus.c` et `get_next_line/get_next_line_utils_bonus.c`.
+To compile the bonus part, replace the two mandatory `.c` files with `get_next_line/get_next_line_bonus.c` and `get_next_line/get_next_line_utils_bonus.c`.
 
-## Organisation du dépôt
+## Repository structure
 
 ```text
 get_next_line/
-├── get_next_line.c                 # Implémentation obligatoire
-├── get_next_line.h                 # En-tête obligatoire et BUFFER_SIZE
-├── get_next_line_utils.c           # Fonctions utilitaires obligatoires
-├── get_next_line_bonus.c           # Implémentation multi-descripteurs
-├── get_next_line_bonus.h           # En-tête bonus
-└── get_next_line_utils_bonus.c     # Fonctions utilitaires bonus
+├── get_next_line.c                 # Mandatory implementation
+├── get_next_line.h                 # Mandatory header and BUFFER_SIZE
+├── get_next_line_utils.c           # Mandatory utility functions
+├── get_next_line_bonus.c           # Multi-file-descriptor implementation
+├── get_next_line_bonus.h           # Bonus header
+└── get_next_line_utils_bonus.c     # Bonus utility functions
 ```
 
-Les fonctions utilitaires fournissent notamment les opérations de longueur, recherche, duplication, concaténation et extraction de sous-chaînes nécessaires à la lecture et à la découpe des lignes.
+The utility functions provide operations such as length calculation, searching, duplication, concatenation, and substring extraction, which are used to read and split lines.
 
-## État du dépôt
+## Repository status
 
-Le dépôt contient les sources des deux versions, mais pas de `Makefile`, de programme principal ni de tests automatisés. Les commandes de compilation ci-dessus supposent donc qu’un fichier client `main.c` est fourni.
+The repository contains the source files for both versions, but does not include a `Makefile`, a main program, or automated tests. The compilation commands above therefore assume that a client `main.c` file is provided.
 
-### Points d’attention
+### Notes
 
-- La version bonus indexe son tableau d’état directement avec `fd`. Elle vérifie les descripteurs négatifs, mais ne vérifie pas que `fd` est inférieur à 1024 ; utiliser un descripteur de valeur supérieure peut donc accéder hors du tableau.
-- Les fichiers `.c` bonus incluent actuellement `get_next_line.h` plutôt que `get_next_line_bonus.h`. Les déclarations des deux en-têtes sont similaires, mais l’en-tête bonus n’est donc pas celui utilisé directement par ces fichiers sources.
+- The bonus version indexes its state array directly with `fd`. It checks for negative file descriptors, but does not check whether `fd` is less than 1024; using a larger descriptor may therefore cause an out-of-bounds access.
+- The bonus `.c` files currently include `get_next_line.h` instead of `get_next_line_bonus.h`. The declarations in the two headers are similar, but the bonus header is not included directly by those source files.
